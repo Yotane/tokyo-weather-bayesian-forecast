@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+.git/
+*.md
+models/
+figures/
+data/*.csv
+data/*.parquet
+!data/tokyo_weather_1970_2024.csv
