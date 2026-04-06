@@ -1,7 +1,7 @@
-# Tokyo Weather Bayesian Forecast
+# Tokyo Weather Bayesian Forecaster
 **Scientific ML project exploring uncertainty estimation in time series forecasting using deep learning and ensemble methods.**
 
-A reproducible pipeline for short-range temperature forecasting that outputs both predictions and uncertainty estimates. Processes 55 years of hourly weather data via PySpark, trains a deep ensemble in PyTorch with Gaussian NLL loss to estimate prediction uncertainty, and validates interval calibration on a held-out 5-year test set. Containerized via Docker Hub for zero-setup reproducibility.
+A reproducible pipeline for short-range temperature forecasting that outputs both predictions and uncertainty estimates. Processes 55 years of hourly reanalysis data via PySpark, trains a deep ensemble in PyTorch with Gaussian NLL loss to estimate prediction uncertainty, and validates interval calibration on a held-out 5-year test set. Containerized via Docker Hub for zero-setup reproducibility.
 
 Dataset sourced from Open-Meteo Archive API — [`https://archive-api.open-meteo.com/v1/archive`](https://archive-api.open-meteo.com/v1/archive).
 Dataset description from Open-Meteo:
@@ -11,17 +11,17 @@ The dataset is ideal for practicing time series forecasting, uncertainty quantif
 
 ## Architecture
 ```text
-Open-Meteo API ──> fetch_tokyo_data.py ──> CSV (raw)
-                                              │
-                                      spark_etl.py (PySpark)
-                                              │
-                              tokyo_features.csv (engineered)
-                                              │
-                              bayesian_forecasting.py (PyTorch)
-                                              │
-                              ├─> Test metrics: RMSE, MAE, 95% coverage
-                              ├─> Live forecast: next 24h hourly + 7d daily
-                              └─> visualize_results.py (Matplotlib)
+Open-Meteo API -> fetch_tokyo_data.py -> CSV (raw)
+                                          |
+                                  spark_etl.py (PySpark)
+                                          |
+                          tokyo_features.csv (engineered)
+                                          |
+                          bayesian_forecasting.py (PyTorch)
+                                          |
+                          |- Test metrics: RMSE, MAE, 95% coverage
+                          |- Live forecast: next 24h hourly + 7d daily
+                          +- visualize_results.py (Matplotlib)
 ```
 
 ## Tech Stack
@@ -80,7 +80,26 @@ python fetch_tokyo_data.py
 python spark_etl.py && python bayesian_forecasting.py && python visualize_results.py
 ```
 
-## Figures of Results
+## Forecast Analysis: New Year 2025
+
+### Recent Conditions (December 2024)
+The model was trained on data through December 31, 2024. The final days of 2024 showed:
+- **December 31**: Unusually warm spike reaching 12.8°C at 13:00, ending the day at 6.7°C
+- **Late December trend**: Temperatures fluctuated between 0°C and 14°C, with several days reaching double-digit highs
+
+### 7-Day Forecast (January 1-7, 2025)
+The model predicts a **cooler start to the new year** compared to the warm spike on New Year's Eve:
+
+**Key Findings:**
+- **Day 1 (Jan 1)**: Daily mean 6.1°C, ranging from 2.8°C to 10.4°C
+- **Days 2-7**: Gradual cooling trend, with daily means declining from 5.9°C to 5.3°C
+- **Temperature range**: Overnight lows dropping to 2.0-2.8°C, afternoon highs reaching 9.3-10.2°C
+- **Uncertainty**: Prediction intervals widen from ±2.1°C on Day 1 to ±3.0°C by Day 7, reflecting increasing forecast uncertainty over time
+
+**Interpretation:**
+The forecast suggests a return to more typical early-January temperatures for Tokyo after the unseasonably warm New Year's Eve. The model captures the expected diurnal cycle (cold nights, mild afternoons) and shows increasing uncertainty as the forecast horizon extends, which is consistent with atmospheric predictability limits. The 95% confidence intervals remain well-calibrated based on historical validation (95.2% coverage on held-out test data).
+
+## Example Outputs
 
 ### Next 24 Hours (Hourly Forecast)
 ![24-Hour Forecast](figures/forecast_24h.png)
@@ -103,15 +122,17 @@ Next 24 Hours (Hourly Forecast from Most Recent Timestamp)
 Hour Ahead   Pred Temp (C)   Uncertainty (sigma)
 ---------------------------------------------
 1            4.6             +/-1.3 C
-2            4.1             +/-1.4 C
+2            4.2             +/-1.5 C
 ...
+24           4.6             +/-2.6 C
 
 Next 7 Days (Daily Overview)
 Day    Condition       Pred Mean  Pred Max   Pred Min   Uncertainty (sigma)
 ---------------------------------------------------------------------------
-Day 1   Partly Cloudy   6.1        10.3       2.8        +/-2.1 C
-Day 2   Variable        5.8        10.1       2.5        +/-2.7 C
+Day 1   Partly Cloudy   6.1        10.4       2.8        +/-2.1 C
+Day 2   Variable        5.9        10.2       2.6        +/-2.7 C
 ...
+Day 7   Variable        5.3        9.3        2.1        +/-3.0 C
 ```
 
 ## Project Structure
@@ -143,7 +164,7 @@ tokyo-weather-bayesian-forecast/
 `bayesian_forecasting.py` implements uncertainty-aware forecasting via:
 
 - **Gaussian NLL loss**: Model outputs both mean and log-variance per timestep, trained to maximize likelihood under Gaussian assumption
-- **Deep ensemble**: Three independently initialized models capture variation due to training stochasticity (epistemic uncertainty)
+- **Deep ensemble**: Three independently trained models capture model disagreement (epistemic uncertainty)
 - **Variance decomposition**: Final uncertainty combines aleatoric (predicted variance) and epistemic (ensemble variance) components
 - **Calibration validation**: Empirical coverage computed on held-out 2019 to 2024 test set verifies that 95% prediction intervals contain true values approximately 95% of the time
 
@@ -160,7 +181,7 @@ Anyone with Docker Desktop can run the full pipeline in one command:
 docker run --rm -v .//app/data -v ./figures:/app/figures yotane/tokyo-weather-bayesian-forecast
 ```
 
-No Python, Java, PySpark, or PyTorch installation required. Useful for reproducibility checks, collaboration, or portfolio review.
+No Python, Java, PySpark, or PyTorch installation required. Ideal for portfolio review, technical interviews, or collaboration.
 
 ## Scope and Limitations
 - **Temperature-only forecasting**: Precipitation conditions derived via rule-based persistence proxy; joint temperature-precipitation modeling scoped for v2
