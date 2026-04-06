@@ -80,7 +80,7 @@ python fetch_tokyo_data.py
 python spark_etl.py && python bayesian_forecasting.py && python visualize_results.py
 ```
 
-## Example Outputs
+## Figures of Results
 
 ### Next 24 Hours (Hourly Forecast)
 ![24-Hour Forecast](figures/forecast_24h.png)
