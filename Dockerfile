@@ -23,4 +23,4 @@ COPY . .
 
 RUN mkdir -p data models figures
 
-CMD ["sh", "-c", "python spark_etl.py && python bayesian_forecasting.py && python visualize_results.py"]
+CMD ["sh", "-c", "python fetch_tokyo_data.py && python spark_etl.py && python bayesian_forecasting.py && python visualize_results.py"]
