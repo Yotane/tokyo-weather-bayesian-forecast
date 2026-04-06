@@ -152,10 +152,14 @@ with torch.no_grad():
     std_inv_live = std_live * scaler_y.scale_[0]
 
 # SAVE FORECAST RESULTS FOR VISUALIZATION
+# ensure dataframe is sorted by timestamp and timestamp is datetime type
+df = df.sort_values('timestamp').reset_index(drop=True)
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+
 # create timestamps for the next 168 hours
-last_ts = pd.to_datetime(df.iloc[-1]['timestamp'])
+last_ts = df.iloc[-1]['timestamp']
 forecast_start = last_ts + pd.Timedelta(hours=1)
-forecast_hours = pd.date_range(start=forecast_start, periods=168, freq='H')
+forecast_hours = pd.date_range(start=forecast_start, periods=168, freq='h')
 
 # create a dataframe with all forecast data
 forecast_df = pd.DataFrame({
@@ -170,6 +174,7 @@ forecast_df = pd.DataFrame({
 output_csv = project_root / "data" / "latest_forecast.csv"
 forecast_df.to_csv(output_csv, index=False)
 print(f"\nForecast results saved to {output_csv}")
+print(f"Forecast period: {forecast_hours[0]} to {forecast_hours[-1]}")
 
 # weather condition classifier
 def classify_weather(temp_std, precip_sum):
