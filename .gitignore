@@ -62,3 +62,6 @@ metastore_db/
 *.pem
 *.key
 *.crt
+
+#independent investigation
+window_ablation.py
